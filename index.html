@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Form</title>
+    <link rel="icon" href="./c09c79_0a87cdedc56244b494b6a19fd26075c1~mv2.png" type="image/x-icon" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/devtools-detect/1.0.0/devtools-detect.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.35/dist/ua-parser.min.js"></script>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+
+      #canvas-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        display: none;
+      }
+
+      #myCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1;
+      }
+
+      #form-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        border: none;
+        z-index: 2;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+      }
+
+      #warning-message {
+        width: 90%;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgb(255, 0, 0);
+        color: white;
+        padding: 20px;
+        font-size: 20px;
+        text-align: center;
+        border-radius: 10px;
+        z-index: 3;
+        display: none;
+      }
+    </style>
+  </head>
+  <body oncontextmenu="return false">
+    <div id="canvas-container">
+      <canvas id="myCanvas"></canvas>
+
+      <iframe
+        id="form-container"
+        src="https://forms.office.com/r/LDcVHGQgnv?origin=lprLink"
+        frameborder="0"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <div id="warning-message">
+      Warning ⚠️: Unauthorized access detected. You are authorized to use the
+      Conexra network connection PC to access the link. We are currently
+      investigating this incident, and further actions will be taken
+      accordingly.
+    </div>
+
+    <script>
+      const apiUrl =
+        "https://script.google.com/macros/s/AKfycbyCLXmMNq-iK6iKZiyLFt2sQcLJ0muz6QmnjSipCncFfmK1-ib-8pNMyT18LDfrCkPMLQ/exec";
+
+      const getCurrentDateTime = () => {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, "0");
+        const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+        const year = now.getFullYear();
+        const hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const period = hours >= 12 ? "PM" : "AM";
+        const formattedHours = hours % 12 || 12; // Convert to 12-hour format
+        const dateTime = `${day}-${month}-${year}, ${formattedHours}:${minutes} ${period}`;
+        return dateTime;
+      };
+
+      //get location
+      const getUserLocation = () => {
+        return new Promise((resolve, reject) => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                // Resolve the promise with the location as a string
+                resolve(
+                  `Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`
+                );
+              },
+              (error) => {
+                // Reject the promise with an error message
+                reject(`Error getting location: ${error.message}`);
+              }
+            );
+          } else {
+            // Reject the promise if geolocation is not supported
+            reject("Geolocation not supported");
+          }
+        });
+      };
+
+      // Example usage with async/await
+      const fetchLocation = async () => {
+        try {
+          const location = await getUserLocation();
+          console.log(location); // Handle the location result here
+        } catch (error) {
+          console.error(error); // Handle the error here
+        }
+      };
+
+      // Check if the device is Windows
+      if (navigator.platform.indexOf("Win") > -1) {
+        // Show canvas if on Windows
+        document.getElementById("canvas-container").style.display = "block";
+
+        // Setup Canvas
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth; // Set canvas to full window width
+        canvas.height = window.innerHeight; // Set canvas to full window height
+
+        // Draw background or any canvas content (for instance, a title or description)
+        ctx.fillStyle = "#f0f0f0"; // Background color
+        ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas
+
+        ctx.fillStyle = "#333"; // Text color
+        ctx.font = "30px Arial"; // Text font size
+        ctx.fillText("Fill out the Form Below", 50, 50); // Add text to canvas
+      } else {
+        // Show warning message if not on Windows
+        document.getElementById("warning-message").style.display = "block";
+        document.getElementById("form-container").style.display = "none";
+      }
+
+      document.addEventListener("contextmenu", (event) =>
+        event.preventDefault()
+      );
+
+      document.onkeydown = function (e) {
+        if (event.keyCode == 123) {
+          return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == "I".charCodeAt(0)) {
+          return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == "J".charCodeAt(0)) {
+          return false;
+        }
+        if (e.ctrlKey && e.keyCode == "U".charCodeAt(0)) {
+          return false;
+        }
+      };
+
+      const getDeviceInfo = async () => {
+        if (navigator.platform.indexOf("Win") > -1) {
+          console.log("working");
+        } else {
+          try {
+            // Parse the device information using UAParser
+            const parser = new UAParser();
+            const result = parser.getResult();
+            const deviceName = `${result.device.vendor || "Unknown"} ${
+              result.device.model || "Unknown"
+            } ${result.os.name || "Unknown"} ${result.os.version || ""} ${
+              result.browser.name || "Unknown"
+            } ${result.browser.version || ""}`;
+
+            // Get the current date and time
+            const currentDateTime = getCurrentDateTime(); // Assuming getCurrentDateTime() is a synchronous function
+
+            // Fetch the location asynchronously
+            const location = await fetchLocation(); // Wait for the location to be fetched
+
+            // Construct the payload object
+            const payload = {
+              "Form Type": "Exit",
+              "Time and Date": currentDateTime,
+              Device: deviceName,
+              Location: location !== undefined ? location : "Unknown",
+            };
+
+            // Sending POST request
+            const response = await fetch(apiUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+              mode: "no-cors",
+            });
+
+            // Handle the response
+            const results = await response.json(); // Corrected the typo here (result instead of resulst)
+            if (results.success) {
+              console.log("Row added successfully!");
+            } else {
+              console.log("Failed to add row: " + results.message);
+            }
+          } catch (error) {
+            console.error("Error during fetch request:", error);
+          }
+        }
+      };
+      // Call the function
+      getDeviceInfo();
+    </script>
+  </body>
+</html>
